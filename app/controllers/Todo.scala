@@ -8,7 +8,7 @@ class TodoController @Inject()(val controllerComponents: ControllerComponents) e
   def index() = Action { implicit req =>
     val vv = ViewValueHome(
       title = "TODOリスト",
-      cssSrc = Seq("main.css"),
+      cssSrc = Seq("main.css","todoList.css"),
       jsSrc = Seq("main.js")
     )
     Ok(views.html.Todo.List(vv))
