@@ -1,0 +1,28 @@
+@(vv: model.ViewValueTodoList)
+@common.Default(vv){
+
+<div class="todoList">
+    <div class="todoList-header"><a href="/todo" class="todoList-header_make">todo作成</a></div>
+    <ul class="list">
+        <li class="list-todo">
+            <p class="list-todo_title">タイトル</p>
+            <p class="list-todo_txt">本文</p>
+            <p class="list-todo_status">ステータス</p>
+            <p class="list-todo_category">カテゴリー</p>
+            <p class="list-todo_edit todoList-todo_linker">編集</p>
+            <p class="todoList-todo_delete todoList-todo_linker">削除</p>
+        </li>
+        @for(i <- 1 to 5 ){
+            <li class="list-todo">
+                <p class="list-todo_title">テスト</p>
+                <p class="list-todo_txt">テストで作りました</p>
+                <p class="list-todo_status">進行中</p>
+                <p class="list-todo_category">フロントエンド</p>
+                <a href="/todo" class="todoList-todo_edit todoList-todo_linker">編集</a>
+                <a href="/todo" class="todoList-todo_delete todoList-todo_linker">削除</a>
+            </li>
+        }
+
+    </ul>
+</div>
+}

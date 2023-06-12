@@ -10,9 +10,9 @@
 <html lang="ja">
   <head>
     <title>Todoアプリ</title>
-    @for(css <- vv.cssSrc) {
-      <link rel="stylesheet" media="screen" href="@{routes.Assets.versioned("stylesheets/" + css)}">
-    }
+   @for(css <- vv.cssSrc) {
+     <link rel="stylesheet" media="screen" href="@{routes.Assets.versioned("stylesheets/" + css)}">
+   }
     <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
   </head>
   <body>
