@@ -14,7 +14,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import play.api.data.Form
 import play.api.data.Forms._
-import model.Todo
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
   extends AbstractController(components) {
