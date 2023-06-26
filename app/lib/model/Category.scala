@@ -1,10 +1,9 @@
 package lib.model
-import com.typesafe.sslconfig.ssl.FakeChainedKeyStore.User
+
 import ixias.model.{@@, Entity, EntityModel, Identity, NOW}
 import shapeless.{nat, the}
 import Category._
 import ixias.util.EnumStatus
-
 import java.time.LocalDateTime
 case class Category(
   id:         Option[Id],

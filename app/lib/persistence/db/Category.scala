@@ -3,9 +3,8 @@ package lib.persistence.db
 import ixias.persistence.model.Table
 import slick.jdbc.JdbcProfile
 import lib.model.Category
-import lib.model.Category.{Color, Id}
-
 import java.time.LocalDateTime
+
 case class CategoryTable[P <: JdbcProfile]()(implicit val driver: P)extends Table[Category,P]{
   import api._
 

@@ -5,8 +5,6 @@
 
 package lib
 
-import scala.concurrent.Future
-
 package object persistence {
 
   val default = onMySQL

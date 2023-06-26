@@ -3,8 +3,8 @@ package lib.model
 import ixias.model.{@@, Entity, EntityModel, Identity, NOW, the}
 import ixias.util.EnumStatus
 import java.time.LocalDateTime
-
 import Todo._
+
 case class Todo(
    id :         Option[Id],
    category_id: Category.Id,

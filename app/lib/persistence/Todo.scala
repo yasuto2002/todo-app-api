@@ -1,18 +1,9 @@
 package lib.persistence
 
-import akka.parboiled2.support
-import cats.implicits.{catsKernelStdEqForOption, catsKernelStdHashForOption, catsSyntaxEq}
-import ixias.model.EntityModel
-import ixias.persistence.{SlickRepository, model}
+import ixias.persistence.{SlickRepository}
 import slick.jdbc.JdbcProfile
-import ixias.persistence.SlickRepository
-import lib.model.{Category, Todo, User}
-import lib.persistence.db.{CategoryTable, TodoTable}
-import slick.ast
-import slick.ast.Join
-
+import lib.model.{Category, Todo}
 import scala.concurrent.Future
-import scala.util.Try
 
 case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
   extends SlickRepository[Todo.Id, Todo, P]

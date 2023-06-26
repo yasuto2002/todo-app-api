@@ -1,19 +1,13 @@
 package controllers
-import ixias.persistence.backend.SlickBackend
-import play.api.mvc.{AbstractController, AnyContent, BaseController, ControllerComponents, MessagesActionBuilder, MessagesRequest, MessagesRequestHeader}
 
+import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
 import javax.inject.{Inject, Singleton}
 import model.ViewValueTodoList
-import slick.jdbc.JdbcBackend.Database
 import lib.model.{Category}
 import lib.persistence.onMySQL.TodoRepository
-import lib.persistence.onMySQL.TodoRepository.EntityEmbeddedId
-import lib.persistence.onMySQL.UserRepository
-
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import play.api.data.Form
-import play.api.data.Forms._
+
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
   extends AbstractController(components) {

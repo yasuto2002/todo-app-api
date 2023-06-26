@@ -1,12 +1,8 @@
 package lib.persistence.db
 
-import akka.http.scaladsl.model.headers.LinkParams.title
-import ixias.persistence.model.{DataSourceName, Table}
+import ixias.persistence.model.{Table}
 import lib.model.Todo
-import lib.model.Todo.{Id, Status}
 import slick.jdbc.JdbcProfile
-import slick.lifted.ProvenShape
-
 import java.time.LocalDateTime
 
 case class TodoTable[P <: JdbcProfile]()(implicit val driver: P)extends Table[Todo,P]{
