@@ -1,23 +1,23 @@
 package controllers
 
 import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
+
 import javax.inject.{Inject, Singleton}
 import model.ViewValueTodoList
-import lib.model.{Category}
 import lib.persistence.onMySQL.TodoRepository
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
+import scala.concurrent.ExecutionContext
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
-  extends AbstractController(components) {
-  def index() = Action { implicit req =>
+(implicit executionContext: ExecutionContext)extends AbstractController(components) {
+  def index = Action.async { implicit req =>
     val vv = ViewValueTodoList(
       title = "TODOリスト",
       cssSrc = Seq("main.css","todoList.css"),
       jsSrc = Seq("main.js")
     )
-    val todos:Seq[(lib.model.Todo,Category)] = Await.result(TodoRepository.all(), Duration.Inf)
-    Ok(views.html.Todo.List(vv)(todos))
+    TodoRepository.all().map(todos => {
+      Ok(views.html.Todo.List(vv)(todos))
+    })
   }
 }
