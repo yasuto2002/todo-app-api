@@ -51,5 +51,5 @@ case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
   def all():Future[Seq[(Todo,Category)]] =
     RunDBAction(TodoTable, "slave") { slick =>
       slick.join(CategoryTable.query).on(_.category_id === _.id).result
-    }
+  }
 }
