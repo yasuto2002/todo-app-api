@@ -4,7 +4,7 @@
     <div>
         @form(routes.TodoController.store) {
             @select(
-                field = todoForm("category_id"),
+                field = todoForm("category"),
                 options = categories.map(category => (category.id.toString,category.v.name)),
             )
             @inputText(todoForm("title"))

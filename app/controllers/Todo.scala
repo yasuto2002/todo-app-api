@@ -22,7 +22,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
 
   val todoForm: Form[Todo] = Form(
     mapping(
-      "category_id" -> longNumber,
+      "category" -> longNumber,
       "title" -> text.verifying(nonEmpty).verifying(maxLength(255)),
       "body" -> text.verifying(nonEmpty).verifying(maxLength(255)),
       "state" -> shortNumber
@@ -80,7 +80,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       todo => {
         CategoryRepository.all().flatMap(categories => {
           categories.find((category:EntityEmbeddedId) => {
-            category.v.id.get == todo.category_id // categoryがEntityEmbeddedIdなのでidがSomeであることが保証されている
+            category.v.id.get == todo.category // categoryがEntityEmbeddedIdなのでidがSomeであることが保証されている
           }) match {
             // カテゴリーが存在するか確認する
             case Some(category) =>
