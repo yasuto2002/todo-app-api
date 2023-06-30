@@ -12,3 +12,7 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 GET     /todo                       controllers.TodoController.index
 
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+POST    /insert/todo                 controllers.TodoController.store
+
+GET    /todo/create                 controllers.TodoController.create
