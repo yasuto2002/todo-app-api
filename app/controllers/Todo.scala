@@ -32,12 +32,6 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
     )
   )
 
-  val error = ViewValueTodoList(
-    title = "エラー",
-    cssSrc = Seq("main.css"),
-    jsSrc = Seq("main.js")
-  )
-
   def index() = Action.async { implicit req =>
     val vv = ViewValueTodoList(
       title = "TODOリスト",
@@ -52,7 +46,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def create() = messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
     val vv = ViewValueTodoList(
       title = "TODOリスト",
-      cssSrc = Seq("main.css", "create.css"),
+      cssSrc = Seq("main.css", "todoCreate.css"),
       jsSrc = Seq("main.js")
     )
 
