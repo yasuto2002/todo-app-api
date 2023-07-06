@@ -17,7 +17,7 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty}
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
-(implicit executionContext: ExecutionContext)extends AbstractController(components) with Category.categoryIdFormatter{
+(implicit executionContext: ExecutionContext)extends AbstractController(components){
 
   val todoForm: Form[TodoForm] = Form(
     mapping(
