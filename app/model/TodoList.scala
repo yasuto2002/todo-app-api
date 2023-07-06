@@ -6,4 +6,4 @@ case class ViewValueTodoList(
   jsSrc:  Seq[String],
 ) extends ViewValueCommon
 
-case class Todo(category:Long,title:String,body:String,State:Short)// Form
+case class TodoForm(category:lib.model.Category.Id,title:String,body:String,State:lib.model.Todo.Status)

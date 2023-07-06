@@ -1,38 +1,34 @@
 package controllers
 
-import lib.model.Category
+import ixias.model.tag
+import lib.model.{Category, Todo}
 import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
 
 import javax.inject.{Inject, Singleton}
-import model.ViewValueTodoList
+import model.{TodoForm, ViewValueTodoList}
 import lib.persistence.onMySQL.TodoRepository
 import play.api.mvc.{AnyContent, MessagesRequest}
 import lib.persistence.onMySQL.CategoryRepository.EntityEmbeddedId
 import lib.persistence.onMySQL.CategoryRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import play.api.data.Form
 import play.api.data.Forms._
-import model.Todo
-import play.api.data.validation.Constraints
 import play.api.data.validation.Constraints.{maxLength, nonEmpty}
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
-(implicit executionContext: ExecutionContext)extends AbstractController(components) {
+(implicit executionContext: ExecutionContext)extends AbstractController(components) with Category.categoryIdFormatter{
 
-  val todoForm: Form[Todo] = Form(
+  val todoForm: Form[TodoForm] = Form(
     mapping(
-      "category" -> longNumber,
+      "category" -> longNumber.transform[Category.Id]({id:Long => tag[Category][Long](id)},{categoryId:Category.Id => categoryId.toLong }),
       "title" -> text.verifying(nonEmpty).verifying(maxLength(255)),
       "body" -> text.verifying(nonEmpty).verifying(maxLength(255)),
-      "state" -> shortNumber
-    )(Todo.apply)(Todo.unapply)
+      "state" -> shortNumber.transform[lib.model.Todo.Status]({Todo.Status(_)},{_.code})
+    )(TodoForm.apply)(TodoForm.unapply)
       .verifying(
-      "Failed form constraints!",
-      fields =>
-        fields match {
-          case todoData => lib.model.Todo.Status.values.find(st => st.code.equals(todoData.State)).isDefined
-        }
+      "Incorrect status!",
+      fields => lib.model.Todo.Status.values.contains(fields.State)
     )
   )
 
@@ -68,7 +64,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def store = messagesAction.async { implicit req =>
     val vv = ViewValueTodoList(
       title = "TODO追加",
-      cssSrc = Seq("main.css", "create.css"),
+      cssSrc = Seq("main.css", "todoCreate.css"),
       jsSrc = Seq("main.js")
     )
     todoForm.bindFromRequest().fold(
@@ -80,15 +76,13 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       todo => {
         CategoryRepository.all().flatMap(categories => {
           categories.find((category:EntityEmbeddedId) => {
-            category.v.id.get == todo.category // categoryがEntityEmbeddedIdなのでidがSomeであることが保証されている
+            category.id.equals(todo.category)
           }) match {
-            // カテゴリーが存在するか確認する
             case Some(category) =>
-              val state = lib.model.Todo.Status.values.find(st => st.code.equals(todo.State))
-              val todoWithNoId: lib.model.Todo.WithNoId = lib.model.Todo.apply(category_id = category.id, title = todo.title, body = todo.body, state = state.get)
+              val todoWithNoId: lib.model.Todo.WithNoId = lib.model.Todo(category_id = category.id, title = todo.title, body = todo.body, state = todo.State)
               TodoRepository.add(todoWithNoId).map(_ => Redirect(routes.TodoController.index()))
             case None => CategoryRepository.all().map(categories => {
-              BadRequest(views.html.Todo.Create(vv)(todoForm.withError("category_id","Invalid value"))(categories))
+              BadRequest(views.html.Todo.Create(vv)(todoForm.withError("category","Invalid value"))(categories))
             })
           }
         })
