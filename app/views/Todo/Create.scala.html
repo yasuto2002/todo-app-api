@@ -1,4 +1,4 @@
-@(vv: model.ViewValueTodoList)(todoForm: Form[model.TodoForm])(categories:Seq[lib.model.Category.EmbeddedId])(implicit request: MessagesRequestHeader)
+@(vv: model.ViewValueTodoList)(todoForm: Form[lib.model.Todo.WithNoId])(categories:Seq[lib.model.Category.EmbeddedId])(implicit request: MessagesRequestHeader)
 @import helper._
 @common.Default(vv){
     @form(action = routes.TodoController.store,args = Symbol("class") -> "createTodoFrom") {
