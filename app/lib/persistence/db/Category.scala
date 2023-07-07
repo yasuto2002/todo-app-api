@@ -22,15 +22,15 @@ case class CategoryTable[P <: JdbcProfile]()(implicit val driver: P)extends Tabl
       // Columns
       /* @1 */ def id = column[Id]("id", O.UInt64, O.PrimaryKey, O.AutoInc)
 
-      /* @3 */ def name = column[String]("name", O.Utf8Char255)
+      /* @2 */ def name = column[String]("name", O.Utf8Char255)
 
-      /* @4 */ def slug = column[String]("slug", O.Text)
+      /* @3 */ def slug = column[String]("slug", O.Text)
 
-      /* @5 */ def color = column[Color]("color", O.UInt8)
+      /* @4 */ def color = column[Color]("color", O.UInt8)
 
-      /* @6 */ def updatedAt = column[LocalDateTime]("updated_at", O.TsCurrent)
+      /* @5 */ def updatedAt = column[LocalDateTime]("updated_at", O.TsCurrent)
 
-      /* @7 */ def createdAt = column[LocalDateTime]("created_at", O.Ts)
+      /* @6 */ def createdAt = column[LocalDateTime]("created_at", O.Ts)
 
 
     type TableElementTuple = (

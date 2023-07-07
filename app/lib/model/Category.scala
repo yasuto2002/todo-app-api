@@ -1,9 +1,10 @@
 package lib.model
 
 import ixias.model.{@@, Entity, EntityModel, Identity, NOW}
-import shapeless.{nat, the}
+import shapeless.{the}
 import Category._
 import ixias.util.EnumStatus
+
 import java.time.LocalDateTime
 case class Category(
   id:         Option[Id],
