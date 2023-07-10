@@ -1,0 +1,15 @@
+@(vv: model.ViewValueTodoList)(todoForm: Form[lib.model.Todo.WithNoId])(categories:Seq[lib.model.Category.EmbeddedId])(todoId:Long)(implicit request: MessagesRequestHeader)
+@import helper._
+@common.Default(vv){
+    @form(action = routes.TodoController.update(todoId),args = Symbol("class") -> "createTodoFrom") {
+        @select(
+            field = todoForm("category"),
+            options = categories.map(category => (category.id.toString,category.v.name)),
+        )
+        @inputText(todoForm("title"))
+        @textarea(field = todoForm("body"), args = Symbol("rows") -> 1, Symbol("cols") -> 255,Symbol("class") -> "todo_body")
+        @helper.inputRadioGroup(todoForm("state"), options = lib.model.Todo.Status.values.map(state => (state.code.toString,state.name)))
+        @CSRF.formField
+        <input type="submit"/>
+    }
+}

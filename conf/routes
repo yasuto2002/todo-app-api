@@ -16,3 +16,7 @@ GET     /assets/*file               controllers.Assets.at(path="/public", file)
 POST    /insert/todo                 controllers.TodoController.store
 
 GET    /todo/create                 controllers.TodoController.create
+
+GET   /todo/edit/:todoId            controllers.TodoController.edit(todoId : Long)
+
+POST   /todo/edit/:todoId            controllers.TodoController.update(todoId : Long)

@@ -84,4 +84,54 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       }
     )
   }
+
+  def edit(todoId: Long) = messagesAction.async { implicit req =>
+    val vv = ViewValueTodoList(
+      title = "Todo編集",
+      cssSrc = Seq("main.css", "todoCreate.css"),
+      jsSrc = Seq("main.js")
+    )
+    CategoryRepository.all().flatMap { categories =>
+      TodoRepository.get(tag[Todo][Long](todoId)).map(todo => {
+        todo match {
+          case Some(value) => {
+            val filledForm = todoForm.fill(Todo(value.v.category_id, value.v.title, value.v.body, value.v.state))
+            Ok(views.html.Todo.Edit(vv)(filledForm)(categories)(todoId))
+          }
+          case None => NotFound("Invalid value")
+        }
+      })
+    }
+  }
+
+  def update(todoId: Long) = messagesAction.async { implicit req =>
+
+    val vv = ViewValueTodoList(
+      title = "Todo編集",
+      cssSrc = Seq("main.css", "todoCreate.css"),
+      jsSrc = Seq("main.js")
+    )
+    todoForm.bindFromRequest().fold(
+      formWithErrors => {
+        CategoryRepository.all().map(categories => {
+          BadRequest(views.html.Todo.Create(vv)(formWithErrors)(categories))
+        })
+      },
+      todo => {
+        CategoryRepository.requiredCheck(todo.v.category_id).flatMap { category =>
+          TodoRepository.get(tag[Todo][Long](todoId)).flatMap(todoExitId => {
+            todoExitId match {
+              case Some(value) => {
+                val copyTodo: Todo.EmbeddedId = value.v.copy(category_id = todo.v.category_id, state = todo.v.state, title = todo.v.title, body = todo.v.body).toEmbeddedId
+                TodoRepository.update(copyTodo).map(_ => Redirect(routes.TodoController.index()))
+              }
+              case None => Future {
+                NotFound("Invalid value")
+              }
+            }
+          })
+        }
+      }
+    )
+  }
 }
