@@ -53,6 +53,7 @@ case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
       slick.join(CategoryTable.query).on(_.category_id === _.id).result
   }
 
-  def requiredCheck(id: Todo.Id): Future[Option[EntityEmbeddedId]] =
-    all().map(todos => todos.collectFirst{case (todo:Todo,_:Category) if (todo.id.equals(id)) => todo.toEmbeddedId })
+  def requiredCheck(id: Todo.Id): Future[Option[EntityEmbeddedId]] = {
+    all().map(todos => todos.collectFirst{case (todo:Todo,_:Category) if (todo.toEmbeddedId.id.equals(id)) => todo.toEmbeddedId })
+  }
 }
