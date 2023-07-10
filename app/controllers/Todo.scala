@@ -48,7 +48,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def create() = messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
     val vv = ViewValueTodoList(
       title = "TODOリスト",
-      cssSrc = Seq("main.css", "todoCreate.css"),
+      cssSrc = Seq("main.css", "todoForm.css"),
       jsSrc = Seq("main.js")
     )
 
@@ -60,7 +60,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def store = messagesAction.async { implicit req =>
     val vv = ViewValueTodoList(
       title = "TODO追加",
-      cssSrc = Seq("main.css", "todoCreate.css"),
+      cssSrc = Seq("main.css", "todoForm.css"),
       jsSrc = Seq("main.js")
     )
     todoForm.bindFromRequest().fold(
@@ -88,7 +88,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def edit(todoId: Long) = messagesAction.async { implicit req =>
     val vv = ViewValueTodoList(
       title = "Todo編集",
-      cssSrc = Seq("main.css", "todoCreate.css"),
+      cssSrc = Seq("main.css", "todoForm.css"),
       jsSrc = Seq("main.js")
     )
     CategoryRepository.all().flatMap { categories =>
@@ -108,7 +108,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
 
     val vv = ViewValueTodoList(
       title = "Todo編集",
-      cssSrc = Seq("main.css", "todoCreate.css"),
+      cssSrc = Seq("main.css", "todoForm.css"),
       jsSrc = Seq("main.js")
     )
     todoForm.bindFromRequest().fold(
