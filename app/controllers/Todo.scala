@@ -5,16 +5,17 @@ import lib.model.{Category, Todo}
 import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
 
 import javax.inject.{Inject, Singleton}
-import model.{ViewValueTodoList}
+import model.ViewValueTodoList
 import lib.persistence.onMySQL.TodoRepository
 import play.api.mvc.{AnyContent, MessagesRequest}
 import lib.persistence.onMySQL.CategoryRepository.EntityEmbeddedId
 import lib.persistence.onMySQL.CategoryRepository
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty}
+import model.ViewValueHome
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
 (implicit executionContext: ExecutionContext)extends AbstractController(components){
@@ -38,7 +39,8 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       cssSrc = Seq("main.css","todoList.css"),
       jsSrc = Seq("main.js")
     )
-    TodoRepository.all().map(todos => {
+    TodoRepository.all().map(result => {
+      val todos = result.map(todo => (todo._1.toEmbeddedId.id,todo._1,todo._2))
       Ok(views.html.Todo.List(vv)(todos))
     })
   }
