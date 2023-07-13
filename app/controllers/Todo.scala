@@ -8,7 +8,6 @@ import javax.inject.{Inject, Singleton}
 import model.ViewValueTodoList
 import lib.persistence.onMySQL.TodoRepository
 import play.api.mvc.{AnyContent, MessagesRequest}
-import lib.persistence.onMySQL.CategoryRepository.EntityEmbeddedId
 import lib.persistence.onMySQL.CategoryRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,8 +38,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       cssSrc = Seq("main.css","todoList.css"),
       jsSrc = Seq("main.js")
     )
-    TodoRepository.all().map(result => {
-      val todos = result.map(todo => (todo._1.toEmbeddedId.id,todo._1,todo._2))
+    TodoRepository.all().map(todos => {
       Ok(views.html.Todo.List(vv)(todos))
     })
   }
@@ -70,17 +68,15 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         })
       },
       todo => {
-        CategoryRepository.all().flatMap(categories => {
-          categories.find((category:EntityEmbeddedId) => {
-            category.id.equals(todo.v.category_id)
-          }) match {
+        CategoryRepository.get(todo.v.category_id).flatMap(categories => categories
+           match {
             case Some(_) =>
               TodoRepository.add(todo).map(_ => Redirect(routes.TodoController.index()))
             case None => CategoryRepository.all().map(categories => {
               BadRequest(views.html.Todo.Create(vv)(todoForm.withError("category","Invalid value"))(categories))
             })
           }
-        })
+        )
       }
     )
   }
@@ -98,7 +94,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
             val filledForm = todoForm.fill(Todo(value.v.category_id, value.v.title, value.v.body, value.v.state))
             Ok(views.html.Todo.Edit(vv)(filledForm)(categories)(todoId))
           }
-          case None => NotFound("Invalid value")
+          case None => BadRequest(views.html.Todo.Create(vv)(todoForm.withError("category","Invalid value"))(categories))
         }
       })
     }
@@ -114,20 +110,21 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
     todoForm.bindFromRequest().fold(
       formWithErrors => {
         CategoryRepository.all().map(categories => {
-          BadRequest(views.html.Todo.Create(vv)(formWithErrors)(categories))
+          BadRequest(views.html.Todo.Edit(vv)(formWithErrors)(categories)(todoId))
         })
       },
-      todoForm => {
+      todoReq => {
         for{
-          todoCheck <- TodoRepository.requiredCheck(tag[Todo][Long](todoId))
-          categoryCheck <- CategoryRepository.requiredCheck(todoForm.v.category_id)
+          todoCheck <- TodoRepository.get(tag[Todo][Long](todoId)) // id確認
+          categoryCheck <- CategoryRepository.get(todoReq.v.category_id) // category確認
           result <- (todoCheck, categoryCheck) match {
             case (Some(todo), Some(_)) => {
-              val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = todoForm.v.category_id, state = todoForm.v.state, title = todoForm.v.title, body = todoForm.v.body).toEmbeddedId
+              // 更新
+              val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = todoReq.v.category_id, state = todoReq.v.state, title = todoReq.v.title, body = todoReq.v.body).toEmbeddedId
               TodoRepository.update(copyTodo).map(_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.TodoController.index())})
             }
             case (_, _) => {
-              Future{NotFound("Invalid value")}
+               Future.successful(BadRequest("Invalid value"))
             }
           }
         }yield result
