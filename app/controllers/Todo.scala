@@ -68,7 +68,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         })
       },
       todo => {
-        CategoryRepository.get(todo.v.category_id).flatMap(categories => categories
+        CategoryRepository.get(todo.v.category_id).flatMap(category => category
            match {
             case Some(_) =>
               TodoRepository.add(todo).map(_ => Redirect(routes.TodoController.index()))
