@@ -1,8 +1,10 @@
 package lib.persistence
 
-import ixias.persistence.{SlickRepository}
+import ixias.model.{@@, Entity}
+import ixias.persistence.SlickRepository
 import slick.jdbc.JdbcProfile
 import lib.model.{Category, Todo}
+
 import scala.concurrent.Future
 
 case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
@@ -48,12 +50,9 @@ case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
     }
   }
 
-  def all():Future[Seq[(Todo,Category)]] =
+  def all(): Future[Seq[(Todo.EmbeddedId, Category.EmbeddedId)]] = {
     RunDBAction(TodoTable, "slave") { slick =>
       slick.join(CategoryTable.query).on(_.category_id === _.id).result
-  }
-
-  def requiredCheck(id: Todo.Id): Future[Option[EntityEmbeddedId]] = {
-    all().map(todos => todos.collectFirst{case (todo:Todo,_:Category) if (todo.toEmbeddedId.id.equals(id)) => todo.toEmbeddedId })
+    } { todos => todos.map(todo => (Todo.build(todo._1),Category.build(todo._2)))}
   }
 }
