@@ -1,7 +1,7 @@
-@(vv: model.ViewValueTodoList)(todoForm: Form[lib.model.Todo.WithNoId])(categories:Seq[lib.model.Category.EmbeddedId])(implicit request: MessagesRequestHeader)
+@(vv: model.ViewValueTodoList)(todoForm: Form[lib.model.Todo.WithNoId])(categories:Seq[lib.model.Category.EmbeddedId])(todoId:Long)(implicit request: MessagesRequestHeader)
 @import helper._
 @common.Default(vv){
-    @form(action = routes.TodoController.store,args = Symbol("class") -> "createTodoFrom") {
+    @form(action = routes.TodoController.update(todoId),args = Symbol("class") -> "createTodoFrom") {
         @select(
             field = todoForm("category"),
             options = categories.map(category => (category.id.toString,category.v.name)),

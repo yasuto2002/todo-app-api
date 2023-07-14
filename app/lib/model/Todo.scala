@@ -42,4 +42,12 @@ object Todo {
       )
     )
   }
+  def unapply(todo: Todo.WithNoId): Option[(Category.Id, String, String, Status)] = {
+    Some((todo.v.category_id, todo.v.title, todo.v.body, todo.v.state))
+  }
+
+  def build( todo:Todo ):Todo#EmbeddedId = {
+    new Entity.EmbeddedId(todo)
+  }
+
 }

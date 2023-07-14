@@ -39,4 +39,8 @@ object Category{
       )
     )
   }
+
+  def build(category: Category):Category#EmbeddedId ={
+    new Entity.EmbeddedId(category)
+  }
 }

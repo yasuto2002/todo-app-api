@@ -3,6 +3,7 @@ package lib.persistence
 import ixias.persistence.SlickRepository
 import lib.model
 import lib.model.Category
+import lib.persistence.onMySQL.CategoryRepository.EntityEmbeddedId
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.Future
@@ -53,4 +54,9 @@ case class CategoryRepository[P <: JdbcProfile]()(implicit val driver: P)
     RunDBAction(CategoryTable, "slave") { slick =>
       slick.result
     }
+
+  def requiredCheck(id:Category.Id): Future[Option[EntityEmbeddedId]] =
+    all().map(categories => categories.find((category: EntityEmbeddedId) => {
+      category.id.equals(id)
+  }))
 }
