@@ -24,8 +24,8 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   val todoForm: Form[Todo.WithNoId] = Form(
     mapping(
       "category" -> longNumber.transform[Category.Id]({id:Long => tag[Category][Long](id)},{categoryId:Category.Id => categoryId.toLong }),
-      "title" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー]*$").r,error = "構文エラー")),
-      "body" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー\\s]*$").r,error = "構文エラー")),
+      "title" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー一-龠]*$").r,error = "英数字・日本語のみ入力可")),
+      "body" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー一-龠\\s]*$").r,error = "英数字・日本語・改行のみ入力可")),
       "state" -> shortNumber.transform[lib.model.Todo.Status]({Todo.Status(_)},{_.code}),
     )(Todo.apply)(Todo.unapply)
       .verifying(
