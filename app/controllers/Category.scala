@@ -20,7 +20,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
                                   (implicit executionContext: ExecutionContext)extends AbstractController(components){
   val categoryForm:Form[Category.WithNoId] = Form(
     mapping(
-      "name"  -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー]*$").r,error = "英数字・日本語のみ入力できます")),
+      "name"  -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー一-龠]]*$").r,error = "英数字・日本語のみ入力できます")),
       "slug"  -> text.verifying(nonEmpty).verifying(maxLength(64)).verifying(pattern(("^[0-9a-zA-Z]*$").r,error = "英数字のみ入力できます")),
       "color" -> shortNumber.transform[Color](Color(_),_.code)
     )(Category.apply)(Category.unapply)
