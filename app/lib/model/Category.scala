@@ -41,7 +41,7 @@ object Category{
   }
 
   def unapply(category:Category#WithNoId):Option[(String,String,Color)] = {
-    Option((category.v.name,category.v.slug,category.v.color))
+    Some((category.v.name,category.v.slug,category.v.color))
   }
 
   def build(category: Category):Category#EmbeddedId ={
