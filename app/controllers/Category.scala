@@ -96,7 +96,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
             CategoryRepository.update(copyCategory).map{_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())}}
           }
           case None => {
-            Future.successful(BadRequest("Invalid value"))
+            Future.successful(BadRequest("The specified category does not exist"))
           }
         }}
       }
@@ -109,7 +109,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
           CategoryRepository.cascadeDelete(category.id).map(_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())})
       }
       case None => {
-        Future.successful(BadRequest("Invalid value"))
+        Future.successful(BadRequest("The specified category does not exist"))
       }
     })
   }

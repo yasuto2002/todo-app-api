@@ -125,8 +125,11 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
               val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = todoReq.v.category_id, state = todoReq.v.state, title = todoReq.v.title, body = todoReq.v.body).toEmbeddedId
               TodoRepository.update(copyTodo).map(_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.TodoController.index())})
             }
+            case (Some(_),None) => {
+              Future.successful(BadRequest("The specified category does not exist"))
+            }
             case (_, _) => {
-               Future.successful(BadRequest("Invalid value"))
+               Future.successful(BadRequest("The specified todo does not exist."))
             }
           }
         }yield result
