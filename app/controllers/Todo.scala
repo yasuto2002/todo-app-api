@@ -13,8 +13,10 @@ import lib.persistence.onMySQL.CategoryRepository
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.validation.Constraints.{maxLength, nonEmpty}
+import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
 import model.ViewValueHome
+
+import scala.util.matching.Regex
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
 (implicit executionContext: ExecutionContext)extends AbstractController(components){
@@ -22,8 +24,8 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   val todoForm: Form[Todo.WithNoId] = Form(
     mapping(
       "category" -> longNumber.transform[Category.Id]({id:Long => tag[Category][Long](id)},{categoryId:Category.Id => categoryId.toLong }),
-      "title" -> text.verifying(nonEmpty).verifying(maxLength(255)),
-      "body" -> text.verifying(nonEmpty).verifying(maxLength(255)),
+      "title" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー]*$").r,error = "構文エラー")),
+      "body" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー\\s]*$").r,error = "構文エラー")),
       "state" -> shortNumber.transform[lib.model.Todo.Status]({Todo.Status(_)},{_.code}),
     )(Todo.apply)(Todo.unapply)
       .verifying(
@@ -130,5 +132,21 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         }yield result
       }
     )
+  }
+
+  def delete(todoId: Long) = messagesAction.async { implicit req =>
+    for{
+      todoCheck <- TodoRepository.get(tag[Todo][Long](todoId))
+      result <- todoCheck match {
+        case Some(todo) => {
+          TodoRepository.remove(todo.id).map(_.fold {
+            InternalServerError("Server Error")
+          } { _ => Redirect(routes.TodoController.index()) })
+        }
+        case _ => {
+          Future.successful(NotFound("Invalid value"))
+        }
+      }
+    }yield result
   }
 }

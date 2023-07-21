@@ -24,7 +24,7 @@ object Todo {
   sealed abstract class Status(val code:Short,val name:String) extends EnumStatus
   object Status extends EnumStatus.Of[Status]{
 
-    case object IS_INACTIVE extends Status(code = 0, name = "未着手")
+    case object IS_INACTIVE extends Status(code = 0, name = "TODO(着手前)")
 
     case object IS_ACTIVE extends Status(code = 1, name = "進行中")
 
@@ -49,5 +49,6 @@ object Todo {
   def build( todo:Todo ):Todo#EmbeddedId = {
     new Entity.EmbeddedId(todo)
   }
+
 
 }
