@@ -1,7 +1,7 @@
 package controllers
 
 import ixias.model.tag
-import json.reads.JsValueCreateTodo
+import json.reads.JsValueTakeTodo
 import lib.model.{Category, Todo}
 import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
 
@@ -65,7 +65,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   def store = Action(parse.json).async { implicit req =>
 
     req.body
-      .validate[JsValueCreateTodo]
+      .validate[JsValueTakeTodo]
       .fold(
         errors => {
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem.apply(404,"Json Parse Error"))))
@@ -120,7 +120,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     req.body
-      .validate[JsValueCreateTodo]
+      .validate[JsValueTakeTodo]
       .fold(
         errors => {
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem.apply(404,"Json Parse Error"))))
