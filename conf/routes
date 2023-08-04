@@ -13,13 +13,13 @@ GET     /todo                           controllers.TodoController.index
 
 GET     /assets/*file                   controllers.Assets.at(path="/public", file)
 
-POST    /todo                    controllers.TodoController.store
+POST    /todo                           controllers.TodoController.store
 
 GET     /todo/create                    controllers.TodoController.create
 
-GET     /todo/edit/:todoId              controllers.TodoController.edit(todoId : Long)
+GET     /todo/:todoId                   controllers.TodoController.edit(todoId : Long)
 
-POST    /todo/edit/:todoId              controllers.TodoController.update(todoId : Long)
+PUT     /todo/:todoId                   controllers.TodoController.update(todoId : Long)
 
 GET     /todo/delete/:todoId            controllers.TodoController.delete(todoId : Long)
 
