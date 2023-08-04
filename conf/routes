@@ -21,7 +21,7 @@ GET     /todo/:todoId                   controllers.TodoController.edit(todoId :
 
 PUT     /todo/:todoId                   controllers.TodoController.update(todoId : Long)
 
-GET     /todo/delete/:todoId            controllers.TodoController.delete(todoId : Long)
+DELETE  /todo/:todoId            controllers.TodoController.delete(todoId : Long)
 
 GET     /category                       controllers.CategoryController.index()
 

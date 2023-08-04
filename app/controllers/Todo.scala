@@ -153,11 +153,11 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       result <- todoCheck match {
         case Some(todo) => {
           TodoRepository.remove(todo.id).map(_.fold {
-            InternalServerError("Server Error")
-          } { _ => Redirect(routes.TodoController.index()) })
+            InternalServerError(Json.toJson(JsValueErrorResponseItem.apply(500, "server error")))
+          } { _ => Ok })
         }
         case _ => {
-          Future.successful(NotFound("Invalid value"))
+          Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem.apply(404, "There was no todo."))))
         }
       }
     }yield result
