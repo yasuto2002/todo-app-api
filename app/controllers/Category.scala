@@ -2,16 +2,19 @@ package controllers
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 import ixias.model.tag
+import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoListItem}
 import lib.model.Category
 import lib.model.Category.Color
-import lib.persistence.onMySQL.CategoryRepository
+import lib.persistence.onMySQL.{CategoryRepository, TodoRepository}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, shortNumber, text}
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
+import play.api.libs.json.Json
 
 import javax.inject._
 import play.api.mvc._
 
+import java.sql.SQLException
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -36,7 +39,12 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       cssSrc = Seq("main.css","categoryList.css"),
       jsSrc  = Seq("main.js")
     )
-    CategoryRepository.all().map(categories => Ok(views.html.Category.List(vv)(categories)))
+    CategoryRepository.all().map(categories => {
+      val categoryJson = categories.map(category => JsValueCategoryListItem.apply(category))
+      Ok(Json.toJson(categoryJson))
+    }).recover {
+      case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem.apply(500, e.getMessage)))
+    }
   }
 
   def create() = messagesAction { implicit req =>
