@@ -1,6 +1,7 @@
 package controllers
 
 import ixias.model.tag
+import json.reads.JsValueCreateTodo
 import lib.model.{Category, Todo}
 import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
 
@@ -14,9 +15,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
-import model.ViewValueHome
+import json.writes.{JsValueErrorResponseItem, JsValueTodoListItem}
+import play.api.libs.json.Json
 
-import scala.util.matching.Regex
+import java.sql.{SQLException, SQLTransientConnectionException}
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
 (implicit executionContext: ExecutionContext)extends AbstractController(components){
@@ -41,8 +43,11 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     TodoRepository.all().map(todos => {
-      Ok(views.html.Todo.List(vv)(todos))
-    })
+      val todosJson = todos.map(todo => JsValueTodoListItem.apply(todo))
+      Ok(Json.toJson(todosJson))
+    }).recover {
+      case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem.apply(500,e.getMessage)))
+    }
   }
 
   def create() = messagesAction.async { implicit request: MessagesRequest[AnyContent] =>
@@ -57,30 +62,30 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
     })
   }
 
-  def store = messagesAction.async { implicit req =>
-    val vv = ViewValueTodoList(
-      title = "TODO追加",
-      cssSrc = Seq("main.css", "todoForm.css"),
-      jsSrc = Seq("main.js")
-    )
-    todoForm.bindFromRequest().fold(
-      formWithErrors => {
-        CategoryRepository.all().map(categories => {
-          BadRequest(views.html.Todo.Create(vv)(formWithErrors)(categories))
-        })
-      },
-      todo => {
-        CategoryRepository.get(todo.v.category_id).flatMap(category => category
-           match {
-            case Some(_) =>
-              TodoRepository.add(todo).map(_ => Redirect(routes.TodoController.index()))
-            case None => CategoryRepository.all().map(categories => {
-              BadRequest(views.html.Todo.Create(vv)(todoForm.withError("category","Invalid value"))(categories))
-            })
+  def store = Action(parse.json).async { implicit req =>
+
+    req.body
+      .validate[JsValueCreateTodo]
+      .fold(
+        errors => {
+          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem.apply(404,"Json Parse Error"))))
+        },
+        todoData => {
+          CategoryRepository.get(tag[Category][Long](todoData.category_id)).flatMap(category => category
+             match {
+              case Some(category) =>
+                val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_id))
+                TodoRepository.add(todo).map(_ => Ok("success"))
+              case None => {
+                val error = JsValueErrorResponseItem.apply(code = 404, message = "category is incorrect")
+                Future.successful(BadRequest(Json.toJson(error)))
+              }
+            }
+          ).recover {
+            case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem.apply(500, e.getMessage)))
           }
-        )
-      }
-    )
+        }
+      )
   }
 
   def edit(todoId: Long) = messagesAction.async { implicit req =>
