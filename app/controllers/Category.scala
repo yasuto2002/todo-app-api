@@ -40,10 +40,10 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       jsSrc  = Seq("main.js")
     )
     CategoryRepository.all().map(categories => {
-      val categoryJson = categories.map(category => JsValueCategoryListItem.apply(category))
+      val categoryJson = categories.map(category => JsValueCategoryListItem(category))
       Ok(Json.toJson(categoryJson))
     }).recover {
-      case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem.apply(500, e.getMessage)))
+      case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500, e.getMessage)))
     }
   }
 
