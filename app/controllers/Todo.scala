@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
-import json.writes.{JsValueCategoryListItem, JsValueEditItem, JsValueErrorResponseItem, JsValueTodoItem, JsValueTodoListItem}
+import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoItem, JsValueTodoListItem}
 import play.api.libs.json.Json
 
 import java.sql.{SQLException, SQLTransientConnectionException}
@@ -43,7 +43,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     TodoRepository.all().map(todos => {
-      val todosJson = todos.map(todo => JsValueTodoListItem(todo))
+      val todosJson = todos.map(todo => JsValueTodoListItem(todo._1,todo._2))
       Ok(Json.toJson(todosJson))
     }).recover {
       case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500,e.getMessage)))
@@ -71,10 +71,10 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404,"Json Parse Error"))))
         },
         todoData => {
-          CategoryRepository.get(Category.Id(todoData.category_id)).flatMap(category => category
+          CategoryRepository.get(todoData.category_id).flatMap(category => category
              match {
               case Some(category) =>
-                val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_id))
+                val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_code))
                 TodoRepository.add(todo).map(_ => Ok("success"))
               case None => {
                 val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
@@ -99,9 +99,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         oTodo match {
           case Some(todo) => {
             val todoJson = JsValueTodoItem(todo)
-            val categoriesJson = categories.map(category => JsValueCategoryListItem(category))
-            val editInfoJson = JsValueEditItem(categoriesJson,todoJson)
-            Ok(Json.toJson(editInfoJson))
+            Ok(Json.toJson(todoJson))
           }
           case None => {
             val error = JsValueErrorResponseItem(code = 404, message = "I couldn't find todo.")
@@ -128,11 +126,11 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         todoData => {
             for{
               todoCheck <- TodoRepository.get(Todo.Id(todoId)) // id確認
-              categoryCheck <- CategoryRepository.get(Category.Id(todoId)) // category確認
+              categoryCheck <- CategoryRepository.get(todoData.category_id) // category確認
               result <- (todoCheck, categoryCheck) match {
                 case (Some(todo), Some(category)) => {
                   // 更新
-                  val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = category.id, state = Todo.Status(todoData.state_id), title = todoData.title, body = todoData.body).toEmbeddedId
+                  val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = category.id, state = Todo.Status(todoData.state_code), title = todoData.title, body = todoData.body).toEmbeddedId
                   TodoRepository.update(copyTodo).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok})
                 }
                 case (Some(_),None) => {

@@ -1,24 +1,33 @@
 package json.writes
 
-import play.api.libs.json.{Json, Writes}
-
+import play.api.libs.json.{JsValue,JsNumber, Json, Writes}
+import ixias.util.json.JsonEnvWrites
+import lib.model.{Category, Todo}
 case class JsValueTodoListItem(
-  id:             Long,
+  id:             Todo.Id,
   title:          String,
   body:           String,
-  state:          Short,
+  state_code:     Todo.Status,
   category_name:  String
 )
 
-object JsValueTodoListItem{
-  implicit val writes: Writes[JsValueTodoListItem] = Json.writes[JsValueTodoListItem]
+object JsValueTodoListItem extends JsonEnvWrites {
 
-  def apply(todo:(lib.model.Todo.EmbeddedId,lib.model.Category.EmbeddedId)): JsValueTodoListItem =
+  implicit val todoIdWrites: Writes[Todo.Id] = new Writes[Todo.Id] {
+    def writes(tag: Todo.Id) = JsNumber(tag)
+  }
+
+  implicit val statusWrites: Writes[Todo.Status] = new Writes[Todo.Status] {
+    def writes(st: Todo.Status): JsValue = EnumStatusWrites.writes(st)
+  }
+
+  implicit val writes: Writes[JsValueTodoListItem] = Json.writes[JsValueTodoListItem]
+  def apply(todo: Todo.EmbeddedId, category: Category.EmbeddedId): JsValueTodoListItem =
     JsValueTodoListItem(
-      id              = todo._1.id,
-      title           = todo._1.v.title,
-      body            = todo._1.v.body,
-      state           = todo._1.v.state.code,
-      category_name   = todo._2.v.name
+      id              = todo.id,
+      title           = todo.v.title,
+      body            = todo.v.body,
+      state_code      = todo.v.state,
+      category_name   = category.v.name
     )
 }
