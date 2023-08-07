@@ -25,7 +25,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
 
   val todoForm: Form[Todo.WithNoId] = Form(
     mapping(
-      "category" -> longNumber.transform[Category.Id]({id:Long => tag[Category][Long](id)},{categoryId:Category.Id => categoryId.toLong }),
+      "category" -> longNumber.transform[Category.Id]({id:Long => Category.Id(id)},{categoryId:Category.Id => categoryId.toLong }),
       "title" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー一-龠]*$").r,error = "英数字・日本語のみ入力可")),
       "body" -> text.verifying(nonEmpty).verifying(maxLength(255)).verifying(pattern(("^[0-9a-zA-Zぁ-んーァ-ンヴー一-龠\\s]*$").r,error = "英数字・日本語・改行のみ入力可")),
       "state" -> shortNumber.transform[lib.model.Todo.Status]({Todo.Status(_)},{_.code}),
@@ -71,7 +71,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404,"Json Parse Error"))))
         },
         todoData => {
-          CategoryRepository.get(tag[Category][Long](todoData.category_id)).flatMap(category => category
+          CategoryRepository.get(Category.Id(todoData.category_id)).flatMap(category => category
              match {
               case Some(category) =>
                 val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_id))
@@ -95,7 +95,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     CategoryRepository.all().flatMap { categories =>
-      TodoRepository.get(tag[Todo][Long](todoId)).map(oTodo => {
+      TodoRepository.get(Todo.Id(todoId)).map(oTodo => {
         oTodo match {
           case Some(todo) => {
             val todoJson = JsValueTodoItem(todo)
@@ -127,8 +127,8 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
         },
         todoData => {
             for{
-              todoCheck <- TodoRepository.get(tag[Todo][Long](todoId)) // id確認
-              categoryCheck <- CategoryRepository.get(tag[Category][Long](todoData.category_id)) // category確認
+              todoCheck <- TodoRepository.get(Todo.Id(todoId)) // id確認
+              categoryCheck <- CategoryRepository.get(Category.Id(todoId)) // category確認
               result <- (todoCheck, categoryCheck) match {
                 case (Some(todo), Some(category)) => {
                   // 更新
@@ -149,7 +149,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
 
   def delete(todoId: Long) = messagesAction.async { implicit req =>
     for{
-      todoCheck <- TodoRepository.get(tag[Todo][Long](todoId))
+      todoCheck <- TodoRepository.get(Todo.Id(todoId))
       result <- todoCheck match {
         case Some(todo) => {
           TodoRepository.remove(todo.id).map(_.fold {

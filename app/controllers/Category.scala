@@ -78,7 +78,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       cssSrc = Seq("main.css", "categoryForm.css"),
       jsSrc = Seq("main.js")
     )
-    CategoryRepository.get(tag[Category][Long](categoryId)).map{ value =>
+    CategoryRepository.get(Category.Id(categoryId)).map{ value =>
       value.fold(Redirect(routes.CategoryController.index()))
       {category =>
         val fillCategory = categoryForm.fill(Category(category.v.name,category.v.slug,category.v.color))
@@ -98,7 +98,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
         Future{ Ok(views.html.Category.Edit(vv)(formWithErrors)(categoryId))}
       },
       categoryReq => {
-        CategoryRepository.get(tag[Category][Long](categoryId)).flatMap{ _ match {
+        CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
           case Some(category) => {
             val copyCategory = category.v.copy(name = categoryReq.v.name,slug = categoryReq.v.slug,color = categoryReq.v.color).toEmbeddedId
             CategoryRepository.update(copyCategory).map{_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())}}
@@ -112,7 +112,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
   }
 
   def delete(categoryId:Long) = messagesAction.async { implicit req =>
-    CategoryRepository.get(tag[Category][Long](categoryId)).flatMap(_ match {
+    CategoryRepository.get(Category.Id(categoryId)).flatMap(_ match {
       case Some(category) => {
           CategoryRepository.cascadeDelete(category.id).map(_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())})
       }
