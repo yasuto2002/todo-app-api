@@ -3,12 +3,11 @@ package controllers
 import ixias.model.tag
 import json.reads.JsValueTakeTodo
 import lib.model.{Category, Todo}
-import play.api.mvc.{AbstractController, ControllerComponents, MessagesActionBuilder}
+import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, MessagesActionBuilder, MessagesRequest, ResponseHeader, Result}
 
 import javax.inject.{Inject, Singleton}
 import model.ViewValueTodoList
 import lib.persistence.onMySQL.TodoRepository
-import play.api.mvc.{AnyContent, MessagesRequest}
 import lib.persistence.onMySQL.CategoryRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,6 +15,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
 import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoItem, JsValueTodoListItem}
+import play.api.http.HttpEntity
 import play.api.libs.json.Json
 
 import java.sql.{SQLException, SQLTransientConnectionException}
@@ -43,7 +43,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     TodoRepository.all().map(todos => {
-      val todosJson = todos.map(todo => JsValueTodoListItem(todo._1,todo._2))
+      val todosJson = todos.map{case (todo, category) => JsValueTodoListItem(todo, category)}
       Ok(Json.toJson(todosJson))
     }).recover {
       case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500,e.getMessage)))
@@ -75,7 +75,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
              match {
               case Some(category) =>
                 val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_code))
-                TodoRepository.add(todo).map(_ => Ok("success"))
+                TodoRepository.add(todo).map(_ => Created)
               case None => {
                 val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
                 Future.successful(BadRequest(Json.toJson(error)))
