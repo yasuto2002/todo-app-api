@@ -2,16 +2,19 @@ package controllers
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 import ixias.model.tag
+import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoListItem}
 import lib.model.Category
 import lib.model.Category.Color
-import lib.persistence.onMySQL.CategoryRepository
+import lib.persistence.onMySQL.{CategoryRepository, TodoRepository}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, shortNumber, text}
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
+import play.api.libs.json.Json
 
 import javax.inject._
 import play.api.mvc._
 
+import java.sql.SQLException
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -36,7 +39,12 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       cssSrc = Seq("main.css","categoryList.css"),
       jsSrc  = Seq("main.js")
     )
-    CategoryRepository.all().map(categories => Ok(views.html.Category.List(vv)(categories)))
+    CategoryRepository.all().map(categories => {
+      val categoryJson = categories.map(category => JsValueCategoryListItem(category))
+      Ok(Json.toJson(categoryJson))
+    }).recover {
+      case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500, e.getMessage)))
+    }
   }
 
   def create() = messagesAction { implicit req =>
@@ -70,7 +78,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       cssSrc = Seq("main.css", "categoryForm.css"),
       jsSrc = Seq("main.js")
     )
-    CategoryRepository.get(tag[Category][Long](categoryId)).map{ value =>
+    CategoryRepository.get(Category.Id(categoryId)).map{ value =>
       value.fold(Redirect(routes.CategoryController.index()))
       {category =>
         val fillCategory = categoryForm.fill(Category(category.v.name,category.v.slug,category.v.color))
@@ -90,7 +98,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
         Future{ Ok(views.html.Category.Edit(vv)(formWithErrors)(categoryId))}
       },
       categoryReq => {
-        CategoryRepository.get(tag[Category][Long](categoryId)).flatMap{ _ match {
+        CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
           case Some(category) => {
             val copyCategory = category.v.copy(name = categoryReq.v.name,slug = categoryReq.v.slug,color = categoryReq.v.color).toEmbeddedId
             CategoryRepository.update(copyCategory).map{_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())}}
@@ -104,7 +112,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
   }
 
   def delete(categoryId:Long) = messagesAction.async { implicit req =>
-    CategoryRepository.get(tag[Category][Long](categoryId)).flatMap(_ match {
+    CategoryRepository.get(Category.Id(categoryId)).flatMap(_ match {
       case Some(category) => {
           CategoryRepository.cascadeDelete(category.id).map(_.fold{InternalServerError("Server Error")}{_ => Redirect(routes.CategoryController.index())})
       }
