@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
-import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoItem, JsValueTodoListItem}
+import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoId, JsValueTodoItem, JsValueTodoListItem}
 import play.api.http.HttpEntity
 import play.api.libs.json.Json
 
@@ -75,7 +75,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
              match {
               case Some(category) =>
                 val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_code))
-                TodoRepository.add(todo).map(_ => Created)
+                TodoRepository.add(todo).map(todoId => Created(Json.toJson(JsValueTodoId(todoId))))
               case None => {
                 val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
                 Future.successful(BadRequest(Json.toJson(error)))
@@ -131,7 +131,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
                 case (Some(todo), Some(category)) => {
                   // 更新
                   val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = category.id, state = Todo.Status(todoData.state_code), title = todoData.title, body = todoData.body).toEmbeddedId
-                  TodoRepository.update(copyTodo).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok})
+                  TodoRepository.update(copyTodo).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok(Json.toJson(JsValueTodoItem(copyTodo)))})
                 }
                 case (Some(_),None) => {
                   Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "The specified category does not exist"))))
