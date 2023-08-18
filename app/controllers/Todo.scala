@@ -78,7 +78,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
               TodoRepository.add(todoNoId).map(id => {
                 val jsonId = JsValueTodoId(id)
                 Result(
-                  header = ResponseHeader(201, Map("Location" -> id.toString)),
+                  header = ResponseHeader(201, Map("Location" -> s"http://localhost:9000/todo/${id.toString}")),
                   body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(jsonId))) ,None)
                 )
               })
