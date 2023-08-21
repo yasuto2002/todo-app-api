@@ -1,7 +1,6 @@
 package controllers
 
 import akka.util.ByteString
-import ixias.model.tag
 import json.reads.JsValueTakeTodo
 import lib.model.{Category, Todo}
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, MessagesActionBuilder, MessagesRequest, ResponseHeader, Result}
@@ -15,11 +14,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.{maxLength, nonEmpty, pattern}
-import json.writes.{JsValueCategoryListItem, JsValueErrorResponseItem, JsValueTodoId, JsValueTodoItem, JsValueTodoListItem}
+import json.writes.{JsValueErrorResponseItem, JsValueTodoId, JsValueTodoItem, JsValueTodoListItem}
 import play.api.http.HttpEntity
 import play.api.libs.json.Json
 
-import java.sql.{SQLException, SQLTransientConnectionException}
+import java.sql.{SQLException}
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
 (implicit executionContext: ExecutionContext)extends AbstractController(components){
@@ -150,7 +149,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       )
   }
 
-  def delete(todoId: Long) = messagesAction.async { implicit req =>
+  def delete(todoId: Long) = Action.async { implicit req =>
     for{
       todoCheck <- TodoRepository.get(Todo.Id(todoId))
       result <- todoCheck match {
