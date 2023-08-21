@@ -1,5 +1,6 @@
 package controllers
 
+import akka.util.ByteString
 import ixias.model.tag
 import json.reads.JsValueTakeTodo
 import lib.model.{Category, Todo}
@@ -43,7 +44,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       jsSrc = Seq("main.js")
     )
     TodoRepository.all().map(todos => {
-      val todosJson = todos.map{case (todo, category) => JsValueTodoListItem(todo, category)}
+      val todosJson = todos.map { case (todo, category) => JsValueTodoListItem(todo, category) }
       Ok(Json.toJson(todosJson))
     }).recover {
       case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500,e.getMessage)))
@@ -71,17 +72,21 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404,"Json Parse Error"))))
         },
         todoData => {
-          CategoryRepository.get(todoData.category_id).flatMap(category => category
-             match {
-              case Some(category) =>
-                val todo = Todo(category.id,todoData.title,todoData.body,Todo.Status(todoData.state_code))
-                TodoRepository.add(todo).map(todoId => Created(Json.toJson(JsValueTodoId(todoId))))
-              case None => {
-                val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
-                Future.successful(BadRequest(Json.toJson(error)))
-              }
+          CategoryRepository.get(todoData.category_id).flatMap {
+            case Some(category) =>
+              val todoNoId = Todo(category.id, todoData.title, todoData.body, Todo.Status(todoData.state_code))
+              TodoRepository.add(todoNoId).map(id => {
+                val jsonId = JsValueTodoId(id)
+                Result(
+                  header = ResponseHeader(201, Map("Location" -> routes.TodoController.edit(id.toLong).url)),
+                  body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(jsonId))) ,None)
+                )
+              })
+            case None => {
+              val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
+              Future.successful(BadRequest(Json.toJson(error)))
             }
-          ).recover {
+          }.recover {
             case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500, e.getMessage)))
           }
         }
