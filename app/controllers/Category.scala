@@ -69,7 +69,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
         CategoryRepository.add(categoryNoId).map(categoryId => {
           val jsonId = JsValueCategoryId(categoryId)
           Result(
-            header = ResponseHeader(201, Map("Location" -> routes.TodoController.edit(categoryId.toLong).url)),
+            header = ResponseHeader(201, Map("Location" -> routes.CategoryController.edit(categoryId.toLong).url)),
             body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(jsonId))), None)
           )
         }).recover {
