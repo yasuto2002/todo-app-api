@@ -61,9 +61,9 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
     req.body
       .validate[JsValueTakeCategory]
       .fold(
-        errors => {
-          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
-        },
+      errors => {
+        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
+      },
       categoryData => {
         val categoryNoId:Category.WithNoId = Category(categoryData.name,categoryData.slug,Category.Color(categoryData.color_code))
         CategoryRepository.add(categoryNoId).map(categoryId => {
@@ -95,9 +95,9 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
     req.body
       .validate[JsValueTakeCategory]
       .fold(
-        errors => {
-          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
-        },
+      errors => {
+        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
+      },
       categoryData => {
         CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
           case Some(category) => {
