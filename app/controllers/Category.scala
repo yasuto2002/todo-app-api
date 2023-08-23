@@ -82,7 +82,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
   def edit(categoryId:Long) = Action.async { implicit req =>
 
     CategoryRepository.get(Category.Id(categoryId)).map{ value =>
-      value.fold(InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "I couldn't find the category."))))
+      value.fold(BadRequest(Json.toJson(JsValueErrorResponseItem(400, "I couldn't find the category."))))
       {category =>
         val categoryJson = JsValueCategoryListItem(category)
         Ok(Json.toJson(categoryJson))
@@ -96,7 +96,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
       .validate[JsValueTakeCategory]
       .fold(
       errors => {
-        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
+        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400, "Json Parse Error"))))
       },
       categoryData => {
         CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
@@ -118,7 +118,7 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
           CategoryRepository.cascadeDelete(category.id).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok})
       }
       case None => {
-        Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "There was no todo."))))
+        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "There was no todo."))))
       }
     })
   }
