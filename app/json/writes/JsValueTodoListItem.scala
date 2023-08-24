@@ -8,7 +8,7 @@ case class JsValueTodoListItem(
   title:          String,
   body:           String,
   state_code:     Todo.Status,
-  category:       Category.EmbeddedId
+  category:       JsValueCategoryListItem
 )
 
 object JsValueTodoListItem extends JsonEnvWrites {
@@ -21,10 +21,6 @@ object JsValueTodoListItem extends JsonEnvWrites {
     def writes(st: Todo.Status): JsValue = EnumStatusWrites.writes(st)
   }
 
-  implicit val categoryWrites: Writes[Category.EmbeddedId] = new Writes[Category.EmbeddedId] {
-    def writes(category: Category.EmbeddedId): JsValue = Json.toJson(JsValueCategoryListItem(category))
-  }
-
   implicit val writes: Writes[JsValueTodoListItem] = Json.writes[JsValueTodoListItem]
   def apply(todo: Todo.EmbeddedId, category: Category.EmbeddedId): JsValueTodoListItem =
     JsValueTodoListItem(
@@ -32,6 +28,6 @@ object JsValueTodoListItem extends JsonEnvWrites {
       title           = todo.v.title,
       body            = todo.v.body,
       state_code      = todo.v.state,
-      category        = category
+      category        = JsValueCategoryListItem(category)
     )
 }

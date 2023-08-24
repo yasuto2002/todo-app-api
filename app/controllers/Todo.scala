@@ -68,7 +68,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       .validate[JsValueTakeTodo]
       .fold(
         errors => {
-          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404,"Json Parse Error"))))
+          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400,"Json Parse Error"))))
         },
         todoData => {
           CategoryRepository.get(todoData.category_id).flatMap {
@@ -82,7 +82,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
                 )
               })
             case None => {
-              val error = JsValueErrorResponseItem(code = 404, message = "category is incorrect")
+              val error = JsValueErrorResponseItem(code = 400, message = "category is incorrect")
               Future.successful(BadRequest(Json.toJson(error)))
             }
           }.recover {
@@ -107,7 +107,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
           }
           case None => {
             val error = JsValueErrorResponseItem(code = 404, message = "I couldn't find todo.")
-            BadRequest(Json.toJson(error))
+            NotFound(Json.toJson(error))
           }
         }
       })
@@ -125,7 +125,7 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
       .validate[JsValueTakeTodo]
       .fold(
         errors => {
-          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404,"Json Parse Error"))))
+          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400,"Json Parse Error"))))
         },
         todoData => {
           for{
@@ -138,10 +138,10 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
                 TodoRepository.update(copyTodo).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok(Json.toJson(JsValueTodoItem(copyTodo)))})
               }
               case (Some(_),None) => {
-                Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "The specified category does not exist"))))
+                Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "The specified category does not exist"))))
               }
               case (_, _) => {
-                 Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "The specified todo does not exist."))))
+                 Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "The specified todo does not exist."))))
               }
             }
           }yield result
