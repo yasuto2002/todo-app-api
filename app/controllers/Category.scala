@@ -61,22 +61,22 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
     req.body
       .validate[JsValueTakeCategory]
       .fold(
-      errors => {
-        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
-      },
-      categoryData => {
-        val categoryNoId:Category.WithNoId = Category(categoryData.name,categoryData.slug,Category.Color(categoryData.color_code))
-        CategoryRepository.add(categoryNoId).map(categoryId => {
-          val jsonId = JsValueCategoryId(categoryId)
-          Result(
-            header = ResponseHeader(201, Map("Location" -> routes.CategoryController.edit(categoryId.toLong).url)),
-            body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(jsonId))), None)
-          )
-        }).recover {
-          case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500, e.getMessage)))
+        errors => {
+          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "Json Parse Error"))))
+        },
+        categoryData => {
+          val categoryNoId:Category.WithNoId = Category(categoryData.name,categoryData.slug,Category.Color(categoryData.color_code))
+          CategoryRepository.add(categoryNoId).map(categoryId => {
+            val jsonId = JsValueCategoryId(categoryId)
+            Result(
+              header = ResponseHeader(201, Map("Location" -> routes.CategoryController.edit(categoryId.toLong).url)),
+              body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(jsonId))), None)
+            )
+          }).recover {
+            case e: SQLException => InternalServerError(Json.toJson(JsValueErrorResponseItem(500, e.getMessage)))
+          }
         }
-      }
-    )
+      )
   }
 
   def edit(categoryId:Long) = Action.async { implicit req =>
@@ -91,25 +91,24 @@ class CategoryController @Inject()(messagesAction: MessagesActionBuilder, compon
   }
 
   def update(categoryId:Long) = Action(parse.json).async { implicit req =>
-
     req.body
       .validate[JsValueTakeCategory]
       .fold(
-      errors => {
-        Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400, "Json Parse Error"))))
-      },
-      categoryData => {
-        CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
-          case Some(category) => {
-            val copyCategory = category.v.copy(name = categoryData.name,slug = categoryData.slug,color = Category.Color(categoryData.color_code)).toEmbeddedId
-            CategoryRepository.update(copyCategory).map{_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{category => Ok(Json.toJson(JsValueCategoryListItem(copyCategory)))}}
-          }
-          case None => {
-            Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400,"The specified category does not exist"))))
-          }
-        }}
-      }
-    )
+        errors => {
+          Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400, "Json Parse Error"))))
+        },
+        categoryData => {
+          CategoryRepository.get(Category.Id(categoryId)).flatMap{ _ match {
+            case Some(category) => {
+              val copyCategory = category.v.copy(name = categoryData.name,slug = categoryData.slug,color = Category.Color(categoryData.color_code)).toEmbeddedId
+              CategoryRepository.update(copyCategory).map{_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{category => Ok(Json.toJson(JsValueCategoryListItem(copyCategory)))}}
+            }
+            case None => {
+              Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400,"The specified category does not exist"))))
+            }
+          }}
+        }
+      )
   }
 
   def delete(categoryId:Long) = Action.async { implicit req =>
