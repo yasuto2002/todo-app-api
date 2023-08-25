@@ -19,6 +19,10 @@ import play.api.http.HttpEntity
 import play.api.libs.json.Json
 
 import java.sql.{SQLException}
+import cats.syntax.all._
+import cats.data.OptionT
+import cats.data.Nested
+
 @Singleton
 class TodoController @Inject()(messagesAction: MessagesActionBuilder, components: ControllerComponents)
 (implicit executionContext: ExecutionContext)extends AbstractController(components){
@@ -63,7 +67,6 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   }
 
   def store = Action(parse.json).async { implicit req =>
-
     req.body
       .validate[JsValueTakeTodo]
       .fold(
@@ -93,34 +96,14 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
   }
 
   def edit(todoId: Long) = messagesAction.async { implicit req =>
-    val vv = ViewValueTodoList(
-      title = "Todo編集",
-      cssSrc = Seq("main.css", "todoForm.css"),
-      jsSrc = Seq("main.js")
-    )
-    CategoryRepository.all().flatMap { categories =>
-      TodoRepository.get(Todo.Id(todoId)).map(oTodo => {
-        oTodo match {
-          case Some(todo) => {
-            val todoJson = JsValueTodoItem(todo)
-            Ok(Json.toJson(todoJson))
-          }
-          case None => {
-            val error = JsValueErrorResponseItem(code = 404, message = "I couldn't find todo.")
-            NotFound(Json.toJson(error))
-          }
-        }
-      })
-    }
+    OptionT(TodoRepository.get(Todo.Id(todoId))).map(todo => {
+          val todoJson = JsValueTodoItem(todo)
+          Ok(Json.toJson(todoJson))
+    })
+      .getOrElse{NotFound(Json.toJson(JsValueErrorResponseItem(code = 404, message = "I couldn't find todo.")))}
   }
 
   def update(todoId: Long) = Action(parse.json).async { implicit req =>
-
-    val vv = ViewValueTodoList(
-      title = "Todo編集",
-      cssSrc = Seq("main.css", "todoForm.css"),
-      jsSrc = Seq("main.js")
-    )
     req.body
       .validate[JsValueTakeTodo]
       .fold(
@@ -128,40 +111,34 @@ class TodoController @Inject()(messagesAction: MessagesActionBuilder, components
           Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(400,"Json Parse Error"))))
         },
         todoData => {
-          for{
-            todoCheck <- TodoRepository.get(Todo.Id(todoId)) // id確認
-            categoryCheck <- CategoryRepository.get(todoData.category_id) // category確認
-            result <- (todoCheck, categoryCheck) match {
-              case (Some(todo), Some(category)) => {
-                // 更新
-                val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = category.id, state = Todo.Status(todoData.state_code), title = todoData.title, body = todoData.body).toEmbeddedId
-                TodoRepository.update(copyTodo).map(_.fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok(Json.toJson(JsValueTodoItem(copyTodo)))})
+          (TodoRepository.get(Todo.Id(todoId)), CategoryRepository.get(todoData.category_id)).mapN[Future[Result]]{
+            (todoCheck, categoryCheck) => (todoCheck, categoryCheck) match {
+                case (Some(todo), Some(category)) => {
+                  // 更新
+                  val copyTodo: Todo.EmbeddedId = todo.v.copy(category_id = category.id, state = Todo.Status(todoData.state_code), title = todoData.title, body = todoData.body).toEmbeddedId
+                  OptionT(TodoRepository.update(copyTodo)).fold{InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))}{_ => Ok(Json.toJson(JsValueTodoItem(copyTodo)))}
+                }
+                case (Some(_),None) => {
+                  Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "The specified category does not exist"))))
+                }
+                case (_, _) => {
+                   Future.successful(BadRequest(Json.toJson(JsValueErrorResponseItem(404, "The specified todo does not exist."))))
+                }
               }
-              case (Some(_),None) => {
-                Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "The specified category does not exist"))))
-              }
-              case (_, _) => {
-                 Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "The specified todo does not exist."))))
-              }
-            }
-          }yield result
+          }.flatten
         }
       )
   }
 
   def delete(todoId: Long) = Action.async { implicit req =>
-    for{
-      todoCheck <- TodoRepository.get(Todo.Id(todoId))
-      result <- todoCheck match {
-        case Some(todo) => {
-          TodoRepository.remove(todo.id).map(_.fold {
-            InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))
-          } { _ => Ok })
-        }
-        case _ => {
-          Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "There was no todo."))))
-        }
-      }
-    }yield result
+
+    OptionT(TodoRepository.get(Todo.Id(todoId))).map(todo => {
+      TodoRepository.remove(todo.id).map(_.fold {
+          InternalServerError(Json.toJson(JsValueErrorResponseItem(500, "server error")))
+        } { _ => Ok })
+    })
+    .getOrElse {
+      Future.successful(NotFound(Json.toJson(JsValueErrorResponseItem(404, "There was no todo."))))
+    }.flatten
   }
 }

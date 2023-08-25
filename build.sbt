@@ -23,8 +23,12 @@ libraryDependencies ++= Seq(
   "mysql"          % "mysql-connector-java" % "5.1.+",
   "ch.qos.logback" % "logback-classic"      % "1.1.+",
 )
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"
 
 // Adds additional packages into conf/routes
 // play.sbt.routes.RoutesKeys.routesImport += "com.example.binders._"
+
+// add cats
+libraryDependencies += "org.typelevel" %% "cats-core" % "2.10.0"
