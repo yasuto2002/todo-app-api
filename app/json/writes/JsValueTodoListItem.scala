@@ -8,7 +8,7 @@ case class JsValueTodoListItem(
   title:          String,
   body:           String,
   state_code:     Todo.Status,
-  category_name:  String
+  category:       JsValueCategoryListItem
 )
 
 object JsValueTodoListItem extends JsonEnvWrites {
@@ -28,6 +28,6 @@ object JsValueTodoListItem extends JsonEnvWrites {
       title           = todo.v.title,
       body            = todo.v.body,
       state_code      = todo.v.state,
-      category_name   = category.v.name
+      category        = JsValueCategoryListItem(category)
     )
 }
